@@ -14,6 +14,19 @@ from pathlib import Path
 import anthropic
 import yaml
 
+from google import genai
+from google.genai import types, errors
+
+client = genai.Client()                      # reads GEMINI_API_KEY
+response = client.models.generate_content(
+    model=config.model,
+    contents=user_prompt,
+    config=types.GenerateContentConfig(
+        system_instruction=system_prompt,
+        max_output_tokens=config.max_tokens,
+    ),
+)
+
 _REQUIRED_KEYS = ("model", "max_tokens", "questions_per_article")
 
 
