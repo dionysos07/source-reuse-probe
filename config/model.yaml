@@ -1,0 +1,15 @@
+# The model that stands in for the search engine's answer generation.
+# The API key is read from ANTHROPIC_API_KEY and never stored here.
+#
+# `model` is the id we ask for; the id the API actually served is recorded
+# separately in every result, because an alias can resolve to a new snapshot
+# without this file changing.
+model: claude-sonnet-5
+max_tokens: 1024
+
+# Zero temperature so a rerun of the same prompt is as close to reproducible as
+# the API allows.
+temperature: 0.0
+
+# Questions generated per article.
+questions_per_article: 3

@@ -1,0 +1,28 @@
+# Scoring rule v1.
+#
+# Bump `version` on any change in this file. The version string is copied into
+# every result record, so a score can always be traced back to the rule that
+# produced it. Changing the rule must show up as a diff here, never in Python
+# and never in a prompt.
+version: v1
+
+# Content-word n-grams of this length are taken from the answer and looked up in
+# the source article. score = matched / total.
+ngram_size: 4
+
+# Unicode case folding rather than str.lower(): folds German "ß" to "ss" so that
+# "Straße" and "Strasse" are one token.
+casefold: true
+
+# Deliberately off. In German, dropping diacritics merges distinct words
+# (schwül/schwul, Bären/Baren) and inflates overlap. The flag exists so the
+# tests can exercise both paths.
+strip_diacritics: false
+
+# Relative to this file.
+stopwords_file: stopwords.txt
+
+# Scores at or above this count as "the answer reproduces the source" when the
+# agreement script compares the rule against hand labels. PROVISIONAL: set from
+# the score distribution of a real run, not from intuition.
+reuse_threshold: 0.10
