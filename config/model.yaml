@@ -1,0 +1,16 @@
+# The model that stands in for the search engine's answer generation.
+# The API key is read from ANTHROPIC_API_KEY and never stored here.
+#
+# `model` is the id we ask for. The id the API actually served is recorded
+# separately in every result, because an alias can resolve to a new snapshot
+# without this file changing.
+model: claude-opus-5
+max_tokens: 1024
+
+# Questions generated per article.
+questions_per_article: 3
+
+# No temperature setting: this model family rejects the parameter. Answers are
+# therefore not bit-reproducible across runs. Records capture the prompt, both
+# model ids and a timestamp so a run can be repeated and compared, which is the
+# most this substitution allows. See the README.

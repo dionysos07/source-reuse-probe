@@ -1,0 +1,9 @@
+# Corpus text is never committed: raw HTML and extracted article text live here.
+cache/
+
+# Local secrets. The model API key is read from the environment, never a file in git.
+.env
+
+__pycache__/
+*.pyc
+.pytest_cache/

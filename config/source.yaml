@@ -1,0 +1,24 @@
+# The one source site this prototype measures against.
+#
+# MedlinePlus is published by the U.S. National Library of Medicine. It was
+# chosen over other trusted health sites because its content is in the public
+# domain, so caching article text locally and publishing derived numbers from a
+# public repository raises no licensing question.
+name: MedlinePlus (U.S. National Library of Medicine)
+url_list: data/urls.txt
+
+# Identifies the crawler to the site operator and points at the code, so a
+# complaint has somewhere to go.
+user_agent: "source-reuse-probe/0.1 (research prototype; +https://github.com/dionysos07/source-reuse-probe)"
+
+# Seconds to wait between requests to the same host. robots.txt Crawl-delay
+# wins when it asks for more than this.
+request_delay_seconds: 2.0
+timeout_seconds: 30
+
+# CSS selector for the article body. Left empty on purpose: the build
+# environment for this repo has no route to medlineplus.gov, so a site-specific
+# selector could not be checked against a live page and is not worth asserting
+# unverified. Empty means extract.py falls back to its generic chain
+# (<article>, then <main>, then the block with the most paragraph text).
+main_text_selector: ""

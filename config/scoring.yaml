@@ -1,0 +1,48 @@
+# Scoring rule v1.
+#
+# Bump `version` on any change in this file. The version string is copied into
+# every result record, so a score can always be traced back to the rule that
+# produced it. Changing the rule must show up as a diff here, never in Python
+# and never in a prompt.
+version: v1
+
+# Content-word n-grams of this length are taken from the answer and looked up in
+# the source article. score = matched / total.
+ngram_size: 4
+
+# Unicode case folding rather than str.lower(): folds German "ß" to "ss" so that
+# "Straße" and "Strasse" are one token.
+casefold: true
+
+# Deliberately off. In German, dropping diacritics merges distinct words
+# (schwül/schwul, Bären/Baren) and inflates overlap. The flag exists so the
+# tests can exercise both paths.
+strip_diacritics: false
+
+# Relative to this file.
+stopwords_file: stopwords.txt
+
+# Scores at or above this count as "the answer reproduces the source" when the
+# agreement script compares the rule against hand labels.
+#
+# 0.03 is derived, not observed, and the derivation is worth knowing because the
+# score is a fraction of the ANSWER, so identical reuse scores differently in
+# answers of different lengths:
+#
+#   - Coincidence floor is effectively zero. Answers that state the source's own
+#     facts in their own words, in the same clinical register, and answers full
+#     of stock health advice, all score 0.000: four consecutive content words is
+#     a constraint that paraphrase does not survive. Any non-zero score is signal.
+#   - One verbatim sentence scores 0.104 in an 80-word answer but 0.032 in a
+#     250-word one. A threshold set for short answers misses the same reuse in
+#     long ones, so it belongs at the bottom of that band.
+#   - 0.03 is about two or three matching 4-grams in a typical answer: a shared
+#     run of six to eight words, past what collocation explains.
+#
+# It errs towards recall on purpose. A human reviews what the rule flags, and the
+# rule's known blind spot is paraphrase it cannot see at all, so a false positive
+# costs a glance and a false negative costs a finding.
+#
+# Recalibrate if a real run puts the no-reuse mass above 0.03, which would most
+# likely mean site boilerplate is surviving extraction and inflating every score.
+reuse_threshold: 0.03
