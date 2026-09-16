@@ -141,10 +141,12 @@ would not change if the answer source did.
   article. `config/source.yaml` takes a site-specific CSS selector to avoid the
   heuristic entirely; it ships empty because it could not be verified against a
   live page from the environment this code was written in.
-- **The threshold is a guess until it is calibrated.** `reuse_threshold` in
-  `config/scoring.yaml` decides what counts as reuse and nothing but hand labels
-  justifies its value. `scripts/agreement.py` exists to check it; the number
-  currently in the config has not been calibrated against a real score
-  distribution.
+- **The threshold is reasoned, not observed.** `reuse_threshold` in
+  `config/scoring.yaml` decides what counts as reuse. Its value is derived from
+  the rule's own arithmetic — the coincidence floor is effectively zero, and one
+  verbatim sentence scores three times higher in a short answer than in a long
+  one — not from a measured score distribution. `scripts/agreement.py` exists to
+  check it against hand labels, and the config records what would justify moving
+  it.
 - **One rule, one length.** n = 4 is a judgement call. Shorter n matches common
   phrasing and inflates scores; longer n catches only long verbatim runs.

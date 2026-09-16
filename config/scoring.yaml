@@ -23,6 +23,26 @@ strip_diacritics: false
 stopwords_file: stopwords.txt
 
 # Scores at or above this count as "the answer reproduces the source" when the
-# agreement script compares the rule against hand labels. PROVISIONAL: set from
-# the score distribution of a real run, not from intuition.
-reuse_threshold: 0.10
+# agreement script compares the rule against hand labels.
+#
+# 0.03 is derived, not observed, and the derivation is worth knowing because the
+# score is a fraction of the ANSWER, so identical reuse scores differently in
+# answers of different lengths:
+#
+#   - Coincidence floor is effectively zero. Answers that state the source's own
+#     facts in their own words, in the same clinical register, and answers full
+#     of stock health advice, all score 0.000: four consecutive content words is
+#     a constraint that paraphrase does not survive. Any non-zero score is signal.
+#   - One verbatim sentence scores 0.104 in an 80-word answer but 0.032 in a
+#     250-word one. A threshold set for short answers misses the same reuse in
+#     long ones, so it belongs at the bottom of that band.
+#   - 0.03 is about two or three matching 4-grams in a typical answer: a shared
+#     run of six to eight words, past what collocation explains.
+#
+# It errs towards recall on purpose. A human reviews what the rule flags, and the
+# rule's known blind spot is paraphrase it cannot see at all, so a false positive
+# costs a glance and a false negative costs a finding.
+#
+# Recalibrate if a real run puts the no-reuse mass above 0.03, which would most
+# likely mean site boilerplate is surviving extraction and inflating every score.
+reuse_threshold: 0.03
