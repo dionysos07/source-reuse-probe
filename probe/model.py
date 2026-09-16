@@ -11,21 +11,9 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-import anthropic
-import yaml
-
 from google import genai
-from google.genai import types, errors
-
-client = genai.Client()                      # reads GEMINI_API_KEY
-response = client.models.generate_content(
-    model=config.model,
-    contents=user_prompt,
-    config=types.GenerateContentConfig(
-        system_instruction=system_prompt,
-        max_output_tokens=config.max_tokens,
-    ),
-)
+from google.genai import errors, types
+import yaml
 
 _REQUIRED_KEYS = ("model", "max_tokens", "questions_per_article")
 
@@ -76,45 +64,56 @@ def complete(system_prompt: str, user_prompt: str, config: ModelConfig) -> Model
     we asked for when an alias resolves to a newer snapshot. Recording only the
     requested id would make a result impossible to place in time.
     """
-    client = _client()
-
+        client = _client()
     try:
-        response = client.messages.create(
+        response = client.models.generate_content(
             model=config.model,
-            max_tokens=config.max_tokens,
-            system=system_prompt,
-            messages=[{"role": "user", "content": user_prompt}],
+            contents=user_prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                max_output_tokens=config.max_tokens,
+                temperature=0.0,
+            ),
         )
-    except anthropic.AuthenticationError as exc:
-        raise ModelError("ANTHROPIC_API_KEY was rejected by the API") from exc
-    except anthropic.RateLimitError as exc:
-        retry_after = exc.response.headers.get("retry-after", "unknown")
-        raise ModelError(f"rate limited by the API; retry after {retry_after}s") from exc
-    except anthropic.APIStatusError as exc:
-        raise ModelError(f"API returned {exc.status_code}: {exc.message}") from exc
-    except anthropic.APIConnectionError as exc:
+    except errors.ClientError as exc:
+        if exc.code == 429:
+            raise ModelError("rate limited by the API; wait and retry") from exc
+        if exc.code in (401, 403):
+            raise ModelError("GEMINI_API_KEY was rejected by the API") from exc
+        raise ModelError(f"API returned {exc.code}: {exc.message}") from exc
+    except errors.ServerError as exc:
+        raise ModelError(f"API returned {exc.code}: {exc.message}") from exc
+    except errors.APIError as exc:
         raise ModelError(f"could not reach the API: {exc}") from exc
 
-    if response.stop_reason == "refusal":
-        raise ModelError(f"the model declined to answer: {user_prompt[:80]!r}")
+    blocked = getattr(response.prompt_feedback, "block_reason", None)
+    if blocked:
+        raise ModelError(f"the prompt was blocked ({blocked}): {user_prompt[:80]!r}")
 
-    text = "\n".join(block.text for block in response.content if block.type == "text").strip()
+    if not response.candidates:
+        raise ModelError(f"the API returned no candidate for: {user_prompt[:80]!r}")
+
+    finish = response.candidates[0].finish_reason
+    if finish not in (types.FinishReason.STOP, types.FinishReason.MAX_TOKENS):
+        raise ModelError(f"the answer was filtered ({finish}): {user_prompt[:80]!r}")
+
+    text = (response.text or "").strip()
     if not text:
         raise ModelError(f"the model returned no text for: {user_prompt[:80]!r}")
 
     return ModelReply(
         text=text,
         model_requested=config.model,
-        model_served=response.model,
+        model_served=response.model_version or config.model,
         system_prompt=system_prompt,
         user_prompt=user_prompt,
     )
 
 
-def _client() -> anthropic.Anthropic:
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+def _client() -> genai.Client:
+    if not os.environ.get("GEMINI_API_KEY"):
         raise ModelError(
-            "ANTHROPIC_API_KEY is not set. Export it before running the "
-            "questions or answer stage; it is never read from a file in this repo."
+            "GEMINI_API_KEY is not set. Set it before running the questions or "
+            "answer stage; it is never read from a file in this repo."
         )
-    return anthropic.Anthropic()
+    return genai.Client()
