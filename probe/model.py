@@ -11,9 +11,9 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+import yaml
 from google import genai
 from google.genai import errors, types
-import yaml
 
 _REQUIRED_KEYS = ("model", "max_tokens", "questions_per_article")
 
@@ -64,7 +64,8 @@ def complete(system_prompt: str, user_prompt: str, config: ModelConfig) -> Model
     we asked for when an alias resolves to a newer snapshot. Recording only the
     requested id would make a result impossible to place in time.
     """
-        client = _client()
+    client = _client()
+
     try:
         response = client.models.generate_content(
             model=config.model,
