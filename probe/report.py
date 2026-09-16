@@ -97,15 +97,15 @@ def format_summary(results: list[Result], config: ScoringConfig) -> str:
         f"scoring rule {config.version}: {config.ngram_size}-gram content-word overlap",
         f"reuse threshold {config.reuse_threshold:g}",
         "",
-        f"{'article':<44} {'n':>3} {'mean':>6} {'max':>6} {'>=thr':>6}",
-        "-" * 68,
+        f"{'article':<40} {'n':>3} {'scored':>6} {'mean':>6} {'max':>6} {'>=thr':>6}",
+        "-" * 71,
     ]
 
     for url in dict.fromkeys(result.article_url for result in results):
         rows = [result for result in results if result.article_url == url]
         lines.append(_row(_label(rows[0]), rows, config))
 
-    lines.append("-" * 68)
+    lines.append("-" * 71)
     lines.append(_row("ALL", results, config))
 
     unscorable = [result for result in results if not result.scorable]
@@ -123,13 +123,13 @@ def _row(label: str, rows: list[Result], config: ScoringConfig) -> str:
     scorable = [row.score for row in rows if row.scorable]
     over = sum(1 for score in scorable if score >= config.reuse_threshold)
     if not scorable:
-        return f"{label:<44} {len(rows):>3} {'-':>6} {'-':>6} {'-':>6}"
+        return f"{label:<40} {len(rows):>3} {0:>6} {'-':>6} {'-':>6} {'-':>6}"
     return (
-        f"{label:<44} {len(rows):>3} {statistics.mean(scorable):>6.3f} "
-        f"{max(scorable):>6.3f} {over:>6}"
+        f"{label:<40} {len(rows):>3} {len(scorable):>6} "
+        f"{statistics.mean(scorable):>6.3f} {max(scorable):>6.3f} {over:>6}"
     )
 
 
 def _label(result: Result) -> str:
     label = result.article_title or result.article_url
-    return label if len(label) <= 44 else label[:41] + "..."
+    return label if len(label) <= 40 else label[:37] + "..."
